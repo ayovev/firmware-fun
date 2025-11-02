@@ -16,14 +16,26 @@ echo "========================================="
 echo "Building Firmware v${VERSION}"
 echo "========================================="
 
-# Update version in platformio.ini
-echo "" >> platformio.ini
-echo "# Version injected by CI" >> platformio.ini
-echo "build_flags = " >> platformio.ini
-echo "    -DFIRMWARE_VERSION=\\\"${VERSION}\\\"" >> platformio.ini
-echo "    -DBUILD_TIMESTAMP=$(date +%s)" >> platformio.ini
+# Update FIRMWARE_VERSION in platformio.ini while preserving other build_flags
+echo "Updating version in platformio.ini..."
 
-echo "✓ Version injected into build"
+# Use sed to find and replace the FIRMWARE_VERSION line
+# This preserves all other build_flags like -Wall, -Wextra, etc.
+sed -i "s/-DFIRMWARE_VERSION=\\\\\"[^\\\"]*\\\\\"/-DFIRMWARE_VERSION=\\\\\\\\\\\\\"${VERSION}\\\\\\\\\\\\\"/g" platformio.ini
+
+# Verify the change
+if grep -q "FIRMWARE_VERSION=\\\\\"${VERSION}\\\\\"" platformio.ini; then
+  echo "✓ Version updated to ${VERSION} in platformio.ini"
+else
+  echo "❌ Failed to update version in platformio.ini"
+  exit 1
+fi
+
+# Show the updated build_flags for verification
+echo ""
+echo "Updated build_flags:"
+grep -A 5 "^build_flags" platformio.ini || true
+echo ""
 
 # Build firmware
 echo ""
