@@ -133,6 +133,12 @@
             }
         ],
         [
+            "@semantic-release/exec",
+            {
+                "prepareCmd": "bash .github/scripts/build-firmware.sh ${nextRelease.version}"
+            }
+        ],
+        [
             "@semantic-release/github",
             {
                 "assets": [
