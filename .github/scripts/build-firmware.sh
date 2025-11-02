@@ -19,52 +19,80 @@ echo "========================================="
 # Update FIRMWARE_VERSION in platformio.ini while preserving other build_flags
 echo "Updating version in platformio.ini..."
 
-# Use Python for more reliable string replacement
-python3 << PYTHON_SCRIPT
+# Pass version to Python script via environment variable
+export VERSION_TO_SET="${VERSION}"
+
+python3 << 'PYTHON_SCRIPT'
 import re
 import sys
+import os
 
-version = "${VERSION}"
+version = os.environ.get('VERSION_TO_SET')
+if not version:
+    print("ERROR: VERSION_TO_SET environment variable not set")
+    sys.exit(1)
 
 # Read the file
 with open('platformio.ini', 'r') as f:
     content = f.read()
 
-# Show current version
-current_match = re.search(r'-DFIRMWARE_VERSION=\\"([^"]+)\\"', content)
-if current_match:
-    print(f"Current version: {current_match.group(1)}")
-else:
-    print("Current version line not found")
+print(f"Looking for FIRMWARE_VERSION to replace with: {version}")
+print("\nCurrent FIRMWARE_VERSION line(s):")
+for line in content.split('\n'):
+    if 'FIRMWARE_VERSION' in line:
+        print(f"  {repr(line)}")
+
+# Try multiple patterns to find the version line
+patterns = [
+    (r'-DFIRMWARE_VERSION=\\"([^"\\]+)\\"', r'-DFIRMWARE_VERSION=\\"{}\\"'),  # -DFIRMWARE_VERSION=\"0.1.0\"
+    (r'-DFIRMWARE_VERSION=\\\"([^"]+)\\\"', r'-DFIRMWARE_VERSION=\\\"{}\\\"'),  # Double escaped
+    (r'-DFIRMWARE_VERSION="([^"]+)"', r'-DFIRMWARE_VERSION="{}"'),  # Plain quotes
+]
+
+current_version = None
+pattern_used = None
+
+for search_pattern, replace_template in patterns:
+    match = re.search(search_pattern, content)
+    if match:
+        current_version = match.group(1)
+        pattern_used = (search_pattern, replace_template)
+        print(f"\n✓ Matched pattern: {search_pattern}")
+        print(f"  Current version: {current_version}")
+        break
+
+if not current_version:
+    print("\n❌ Could not find FIRMWARE_VERSION in any expected format")
+    print("\nFull platformio.ini content:")
+    print(content)
     sys.exit(1)
 
 # Replace the version
-new_content = re.sub(
-    r'-DFIRMWARE_VERSION=\\"[^"]+\\"',
-    f'-DFIRMWARE_VERSION=\\"{version}\\"',
-    content
-)
+search_pattern, replace_template = pattern_used
+new_content = re.sub(search_pattern, replace_template.format(version), content)
 
 # Write back
 with open('platformio.ini', 'w') as f:
     f.write(new_content)
 
+print(f"\n✓ File updated")
+
 # Verify
 with open('platformio.ini', 'r') as f:
     verify_content = f.read()
-    
-if f'-DFIRMWARE_VERSION=\\"{version}\\"' in verify_content:
-    print(f"✓ Version updated to {version} in platformio.ini")
+
+# Check if new version appears in the file
+if version in verify_content and 'FIRMWARE_VERSION' in verify_content:
+    print(f"✓ Version successfully updated to {version}")
+    print(f"\nNew FIRMWARE_VERSION line:")
+    for line in verify_content.split('\n'):
+        if 'FIRMWARE_VERSION' in line:
+            print(f"  {line}")
 else:
-    print("❌ Failed to update version")
-    print("\nplatformio.ini content:")
+    print("❌ Failed to verify version update")
+    print("\nplatformio.ini after update:")
     print(verify_content)
     sys.exit(1)
-
-# Show the updated line
-new_match = re.search(r'-DFIRMWARE_VERSION=\\"([^"]+)\\"', verify_content)
-if new_match:
-    print(f"New version: {new_match.group(1)}")
 PYTHON_SCRIPT
 
 echo ""
