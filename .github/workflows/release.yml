@@ -1,0 +1,155 @@
+name: Automated Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Job 1: Determine if release is needed and calculate version
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+      new_release_major_version: ${{ steps.semantic.outputs.new_release_major_version }}
+      new_release_minor_version: ${{ steps.semantic.outputs.new_release_minor_version }}
+      new_release_patch_version: ${{ steps.semantic.outputs.new_release_patch_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Need full history for semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "24"
+
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release@23
+          npm install -g @semantic-release/git
+          npm install -g @semantic-release/changelog
+          npm install -g @semantic-release/exec
+          npm install -g conventional-changelog-conventionalcommits
+
+      - name: Run semantic-release (dry-run to get version)
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Run semantic-release to determine next version
+          npx semantic-release --dry-run
+
+  # Job 2: Build and release firmware (only if new version)
+  build-and-release:
+    needs: version
+    if: needs.version.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          pip install platformio
+          pio upgrade --dev
+          pio pkg update
+
+      - name: Update firmware version in code
+        run: |
+          # Update version in platformio.ini
+          sed -i 's/^build_flags = -DFIRMWARE_VERSION=.*/build_flags = -DFIRMWARE_VERSION=\\"${{ needs.version.outputs.new_release_version }}\\"/' platformio.ini
+
+          # Or if version is in main.cpp
+          # sed -i 's/const char\* FIRMWARE_VERSION = .*/const char* FIRMWARE_VERSION = "${{ needs.version.outputs.new_release_version }}";/' src/main.cpp
+
+      - name: Build Firmware
+        run: |
+          pio run --environment esp32-s3
+
+      - name: Generate firmware info
+        run: |
+          # Calculate SHA256
+          sha256sum .pio/build/esp32-s3/firmware.bin | cut -d' ' -f1 > firmware.sha256
+
+          # Get file size
+          stat -c%s .pio/build/esp32-s3/firmware.bin > firmware.size
+
+      - name: Sign Firmware
+        env:
+          SIGNING_KEY: ${{ secrets.FIRMWARE_SIGNING_KEY }}
+        run: |
+          # Write private key to file
+          echo "$SIGNING_KEY" > private_key.pem
+
+          # Hash the firmware
+          openssl dgst -sha256 -binary \
+            -out .pio/build/esp32-s3/firmware.bin.hash \
+            .pio/build/esp32-s3/firmware.bin
+
+          # Sign the hash
+          openssl rsautl -sign \
+            -in .pio/build/esp32-s3/firmware.bin.hash \
+            -inkey private_key.pem \
+            -out .pio/build/esp32-s3/firmware.bin.sig
+
+          # Remove private key
+          rm -f private_key.pem
+
+      - name: Create Release Manifest
+        run: |
+          cat > manifest.json << EOF
+          {
+            "version": "${{ needs.version.outputs.new_release_version }}",
+            "release_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "firmware_url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.version.outputs.new_release_version }}/firmware.bin",
+            "signature_url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.version.outputs.new_release_version }}/firmware.bin.sig",
+            "sha256": "$(cat firmware.sha256)",
+            "size_bytes": $(cat firmware.size),
+            "min_version_required": "1.0.0",
+            "changelog_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ needs.version.outputs.new_release_version }}"
+          }
+          EOF
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "24"
+
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release@23
+          npm install -g @semantic-release/git
+          npm install -g @semantic-release/changelog
+          npm install -g @semantic-release/exec
+          npm install -g conventional-changelog-conventionalcommits
+
+      - name: Create Release with semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Upload firmware artifacts to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.version.outputs.new_release_version }}
+          files: |
+            .pio/build/esp32-s3/firmware.bin
+            .pio/build/esp32-s3/firmware.bin.sig
+            manifest.json
+            firmware.sha256
+          fail_on_unmatched_files: true

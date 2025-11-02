@@ -1,0 +1,172 @@
+{
+    "branches": [
+        "main",
+        "master"
+    ],
+    "plugins": [
+        [
+            "@semantic-release/commit-analyzer",
+            {
+                "preset": "conventionalcommits",
+                "releaseRules": [
+                    {
+                        "type": "feat",
+                        "release": "minor"
+                    },
+                    {
+                        "type": "fix",
+                        "release": "patch"
+                    },
+                    {
+                        "type": "perf",
+                        "release": "patch"
+                    },
+                    {
+                        "type": "revert",
+                        "release": "patch"
+                    },
+                    {
+                        "type": "docs",
+                        "release": false
+                    },
+                    {
+                        "type": "style",
+                        "release": false
+                    },
+                    {
+                        "type": "chore",
+                        "release": false
+                    },
+                    {
+                        "type": "refactor",
+                        "release": "patch"
+                    },
+                    {
+                        "type": "test",
+                        "release": false
+                    },
+                    {
+                        "type": "build",
+                        "release": false
+                    },
+                    {
+                        "type": "ci",
+                        "release": false
+                    },
+                    {
+                        "breaking": true,
+                        "release": "major"
+                    }
+                ]
+            }
+        ],
+        [
+            "@semantic-release/release-notes-generator",
+            {
+                "preset": "conventionalcommits",
+                "presetConfig": {
+                    "types": [
+                        {
+                            "type": "feat",
+                            "section": "✨ Features",
+                            "hidden": false
+                        },
+                        {
+                            "type": "fix",
+                            "section": "🐛 Bug Fixes",
+                            "hidden": false
+                        },
+                        {
+                            "type": "perf",
+                            "section": "⚡ Performance Improvements",
+                            "hidden": false
+                        },
+                        {
+                            "type": "revert",
+                            "section": "⏪ Reverts",
+                            "hidden": false
+                        },
+                        {
+                            "type": "docs",
+                            "section": "📚 Documentation",
+                            "hidden": false
+                        },
+                        {
+                            "type": "style",
+                            "section": "💎 Styles",
+                            "hidden": true
+                        },
+                        {
+                            "type": "chore",
+                            "section": "🔧 Miscellaneous Chores",
+                            "hidden": true
+                        },
+                        {
+                            "type": "refactor",
+                            "section": "♻️ Code Refactoring",
+                            "hidden": false
+                        },
+                        {
+                            "type": "test",
+                            "section": "✅ Tests",
+                            "hidden": true
+                        },
+                        {
+                            "type": "build",
+                            "section": "🏗️ Build System",
+                            "hidden": true
+                        },
+                        {
+                            "type": "ci",
+                            "section": "👷 Continuous Integration",
+                            "hidden": true
+                        }
+                    ]
+                }
+            }
+        ],
+        [
+            "@semantic-release/changelog",
+            {
+                "changelogFile": "CHANGELOG.md",
+                "changelogTitle": "# Changelog\n\nAll notable changes to this project will be documented in this file."
+            }
+        ],
+        [
+            "@semantic-release/github",
+            {
+                "assets": [
+                    {
+                        "path": ".pio/build/esp32-s3/firmware.bin",
+                        "name": "firmware.bin",
+                        "label": "Firmware Binary"
+                    },
+                    {
+                        "path": ".pio/build/esp32-s3/firmware.bin.sig",
+                        "name": "firmware.bin.sig",
+                        "label": "Firmware Signature"
+                    },
+                    {
+                        "path": "manifest.json",
+                        "name": "manifest.json",
+                        "label": "Update Manifest"
+                    },
+                    {
+                        "path": "firmware.sha256",
+                        "name": "firmware.sha256",
+                        "label": "SHA256 Checksum"
+                    }
+                ]
+            }
+        ],
+        [
+            "@semantic-release/git",
+            {
+                "assets": [
+                    "CHANGELOG.md"
+                ],
+                "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+            }
+        ]
+    ]
+}

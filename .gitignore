@@ -1,0 +1,24 @@
+# PlatformIO build and package directories
+.pio/
+.pioenvs/
+.piolibdeps/
+.pio/libdeps/
+.pio/build/
+.pio/package/
+
+# VS Code settings
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Node.js modules
+node_modules/
+
+# Firmware binaries and generated files
+*.bin
+*.elf
+*.hex
+*.map
+*.pyc
+*.log

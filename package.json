@@ -1,0 +1,34 @@
+{
+    "name": "firmware-fun",
+    "version": "0.1.0",
+    "description": "Roast Logger Firmware",
+    "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ayovev/firmware-fun.git"
+    },
+    "scripts": {
+        "commit": "git-cz",
+        "release": "semantic-release",
+        "release:dry": "semantic-release --dry-run"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^20.1.0",
+        "@commitlint/config-conventional": "^20.0.0",
+        "@semantic-release/changelog": "^6.0.3",
+        "@semantic-release/commit-analyzer": "^13.0.1",
+        "@semantic-release/exec": "^7.1.0",
+        "@semantic-release/git": "^10.0.1",
+        "@semantic-release/github": "^12.0.0",
+        "@semantic-release/release-notes-generator": "^14.1.0",
+        "commitizen": "^4.3.1",
+        "conventional-changelog-conventionalcommits": "^9.1.0",
+        "cz-conventional-changelog": "^3.3.0",
+        "semantic-release": "^25.0.1"
+    },
+    "config": {
+        "commitizen": {
+            "path": "./node_modules/cz-conventional-changelog"
+        }
+    }
+}
