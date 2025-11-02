@@ -19,22 +19,54 @@ echo "========================================="
 # Update FIRMWARE_VERSION in platformio.ini while preserving other build_flags
 echo "Updating version in platformio.ini..."
 
-# Use sed to find and replace the FIRMWARE_VERSION line
-# This preserves all other build_flags like -Wall, -Wextra, etc.
-sed -i "s/-DFIRMWARE_VERSION=\\\\\"[^\\\"]*\\\\\"/-DFIRMWARE_VERSION=\\\\\\\\\\\\\"${VERSION}\\\\\\\\\\\\\"/g" platformio.ini
+# Use Python for more reliable string replacement
+python3 << PYTHON_SCRIPT
+import re
+import sys
 
-# Verify the change
-if grep -q "FIRMWARE_VERSION=\\\\\"${VERSION}\\\\\"" platformio.ini; then
-  echo "✓ Version updated to ${VERSION} in platformio.ini"
-else
-  echo "❌ Failed to update version in platformio.ini"
-  exit 1
-fi
+version = "${VERSION}"
 
-# Show the updated build_flags for verification
-echo ""
-echo "Updated build_flags:"
-grep -A 5 "^build_flags" platformio.ini || true
+# Read the file
+with open('platformio.ini', 'r') as f:
+    content = f.read()
+
+# Show current version
+current_match = re.search(r'-DFIRMWARE_VERSION=\\"([^"]+)\\"', content)
+if current_match:
+    print(f"Current version: {current_match.group(1)}")
+else:
+    print("Current version line not found")
+    sys.exit(1)
+
+# Replace the version
+new_content = re.sub(
+    r'-DFIRMWARE_VERSION=\\"[^"]+\\"',
+    f'-DFIRMWARE_VERSION=\\"{version}\\"',
+    content
+)
+
+# Write back
+with open('platformio.ini', 'w') as f:
+    f.write(new_content)
+
+# Verify
+with open('platformio.ini', 'r') as f:
+    verify_content = f.read()
+    
+if f'-DFIRMWARE_VERSION=\\"{version}\\"' in verify_content:
+    print(f"✓ Version updated to {version} in platformio.ini")
+else:
+    print("❌ Failed to update version")
+    print("\nplatformio.ini content:")
+    print(verify_content)
+    sys.exit(1)
+
+# Show the updated line
+new_match = re.search(r'-DFIRMWARE_VERSION=\\"([^"]+)\\"', verify_content)
+if new_match:
+    print(f"New version: {new_match.group(1)}")
+PYTHON_SCRIPT
+
 echo ""
 
 # Build firmware
