@@ -1,7 +1,6 @@
-#ifndef SETUP_PORTAL_HTML_H
-#define SETUP_PORTAL_HTML_H
+#pragma once
 
-const char* setupPortalHtml = R"rawliteral(
+static const char *setupPortalHtml = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
@@ -127,5 +126,3 @@ const char* setupPortalHtml = R"rawliteral(
 </body>
 </html>
 )rawliteral";
-
-#endif // SETUP_PORTAL_HTML_H
