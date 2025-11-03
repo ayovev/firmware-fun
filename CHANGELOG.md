@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1](https://github.com/ayovev/firmware-fun/compare/v1.1.0...v1.1.1) (2025-11-03)
+
+### 📚 Documentation
+
+* added first version of README file ([8cc4e2c](https://github.com/ayovev/firmware-fun/commit/8cc4e2c927546b689dafa09a9d3132bbea9b7079))
+
+### ♻️ Code Refactoring
+
+* refactored code out of one file into a more organized structure ([bb9c174](https://github.com/ayovev/firmware-fun/commit/bb9c174ba8afd56ec3e01cf4b8ae80331c961688))
+
 ## [1.1.0](https://github.com/ayovev/firmware-fun/compare/v1.0.1...v1.1.0) (2025-11-03)
 
 ### ✨ Features
