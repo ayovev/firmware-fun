@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/ayovev/firmware-fun/compare/v1.0.1...v1.1.0) (2025-11-03)
+
+### ✨ Features
+
+* **ota:** added signature verification; normalize versions before comparing ([9e0178a](https://github.com/ayovev/firmware-fun/commit/9e0178abaf87c6fc908ebba905b54fee6f7e881f))
+
 ## [1.0.1](https://github.com/ayovev/firmware-fun/compare/v1.0.0...v1.0.1) (2025-11-03)
 
 ### 🐛 Bug Fixes
