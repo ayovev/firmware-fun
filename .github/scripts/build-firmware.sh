@@ -131,19 +131,13 @@ else
   # Write private key to temporary file
   echo "$SIGNING_KEY" > private_key.pem
   
-  # Hash the firmware
-  openssl dgst -sha256 -binary \
-    -out .pio/build/esp32-s3/firmware.bin.hash \
+  # Sign the firmware directly with SHA256 and PKCS#1 v1.5 padding
+  openssl dgst -sha256 -sign private_key.pem \
+    -out .pio/build/esp32-s3/firmware.bin.sig \
     .pio/build/esp32-s3/firmware.bin
   
-  # Sign the hash
-  openssl rsautl -sign \
-    -in .pio/build/esp32-s3/firmware.bin.hash \
-    -inkey private_key.pem \
-    -out .pio/build/esp32-s3/firmware.bin.sig
-  
   # Remove private key
-  rm -f private_key.pem .pio/build/esp32-s3/firmware.bin.hash
+  rm -f private_key.pem
   
   echo "✓ Firmware signed"
 fi
