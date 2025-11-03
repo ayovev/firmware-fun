@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/ayovev/firmware-fun/compare/v1.0.0...v1.0.1) (2025-11-03)
+
+### 🐛 Bug Fixes
+
+* correct firmware signing method for mbedTLS verification ([1b58ce3](https://github.com/ayovev/firmware-fun/commit/1b58ce373d073216242f98f339bf5b91bdaa91a2))
+
 ## 1.0.0 (2025-11-02)
 
 ### 🐛 Bug Fixes
